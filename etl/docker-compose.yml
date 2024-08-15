@@ -1,0 +1,30 @@
+version: '3'
+services:
+
+  service:
+    build: app
+    env_file:
+      - ./.env
+    volumes:
+      - static:/opt/app/static
+    entrypoint: /entrypoint.sh
+    depends_on:
+      - theatre-db
+    restart: always
+
+  theatre-db:
+    image: postgres:16.3-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes: 
+  db:
