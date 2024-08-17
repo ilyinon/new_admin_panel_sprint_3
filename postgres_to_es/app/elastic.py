@@ -1,6 +1,7 @@
 import json
 
 from elasticsearch import Elasticsearch, NotFoundError
+from elasticsearch.helpers import bulk
 
 from decorator import backoff
 from config import settings
@@ -16,9 +17,9 @@ class Elastic:
 
     @backoff
     def create_index(self):
+        logger.info("Starting")
         try:
             self.es.indices.get(index=self.index)
-            logger.info("%s is exist", self.index)
         except NotFoundError:
             logger.info("%s is not exist", self.index)
             with open(self.schema, 'r') as _:
@@ -27,7 +28,11 @@ class Elastic:
             logger.info("Trying to create %s schema in ES", self.schema)
             self.es.indices.create(index=self.index, body=elastic_schema_json)
             logger.info("%s schema is created in ES", self.schema)
+        finally:
+            logger.info("%s is exist", self.index)
+    def load_entry(self, data):
+        actions = [ {"_index": self.index, "_source": row, '_id': row['id']} for row in data]
+        bulk(self.es, actions)
 
-logger.info("Starting")
+
 elastic = Elastic()
-elastic.create_index()

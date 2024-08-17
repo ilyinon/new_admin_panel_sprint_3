@@ -3,7 +3,7 @@ from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row
 
 
-# from logger import logger
+from logger import logger
 
 from decorator import backoff
 from config import settings
@@ -18,7 +18,6 @@ class Postgres:
                                  password=settings.POSTGRES_PASSWORD,
                                  host=settings.POSTGRES_HOST,
                                  options='-c search_path=content')
-        print(self.dsn)
     
     def extract(self):
         batch_size: int = 100
@@ -28,13 +27,15 @@ class Postgres:
                 while True:
                     films = cur.fetchmany(batch_size)
                     if not films:
+                        logger.info("No film to extract")
                         break
                     for film in films:
                         film['actors'] = self.get_detail(film['id'], ACTORS_QUERY)
                         film['directors'] = self.get_detail(film['id'], DIRECTORS_QUERY)
-                        # film['writers'] = self.get_writers(film['id'])
-                        # film['genres'] = self.get_genres(film['id'])
-                        print(film['directors'])
+                        film['writers'] = self.get_detail(film['id'], WRITERS_QUERY)
+                        film['genres'] = self.get_detail(film['id'], GENRES_QUERY)
+                        logger.debug(film)
+                        return film
 
 
     def get_detail(self, film_id, QUERY):
@@ -45,4 +46,3 @@ class Postgres:
                 return cur.fetchall()
 
 pg = Postgres()
-pg.extract()
