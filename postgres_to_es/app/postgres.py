@@ -8,6 +8,7 @@ from logger import logger
 from decorator import backoff
 from config import settings
 from queries import *
+from models import Movie
 
 
 class Postgres:
@@ -34,8 +35,8 @@ class Postgres:
                         film['directors'] = self.get_detail(film['id'], DIRECTORS_QUERY)
                         film['writers'] = self.get_detail(film['id'], WRITERS_QUERY)
                         film['genres'] = self.get_detail(film['id'], GENRES_QUERY)
-                        logger.debug(film)
-                        return film
+
+                        yield Movie(**film)
 
 
     def get_detail(self, film_id, QUERY):

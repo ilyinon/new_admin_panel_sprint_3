@@ -31,7 +31,12 @@ class Elastic:
         finally:
             logger.info("%s is exist", self.index)
     def load_entry(self, data):
-        actions = [ {"_index": self.index, "_source": row, '_id': row['id']} for row in data]
+        actions = []
+        for row in data:
+            print(row['id'])
+            print(type(row['id']))
+            actions.append({"_index": self.index, "_source": row, '_id': row['id']})
+        # actions = [ {"_index": self.index, "_source": row, '_id': row['id']} for row in data]
         bulk(self.es, actions)
 
 

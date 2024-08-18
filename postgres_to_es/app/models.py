@@ -18,15 +18,12 @@ class Genre(BaseModel):
 
 class Movie(BaseModel):
     id: uuid.UUID
+    rating: Optional[float]
     title: str
     description: Optional[str]
     creation_date: Optional[Union[datetime, str]]
-    # file_path: Optional[str]
-    # rating: Optional[float]
-    # type: str
-    # created_at: Union[datetime, str]
-    # updated_at: Union[datetime, str]
-    # actors: Optional[List[PersonRole]]
-    # directors: Optional[List[PersonRole]]
-    # writers: Optional[List[PersonRole]]
-    # genres: Optional[List[Genre]]
+    type: str
+    actors: Optional[List[PersonRole]]
+    directors: Optional[List[PersonRole]]
+    writers: Optional[List[PersonRole]]
+    genres: Optional[List[Genre]]
