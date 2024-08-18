@@ -6,6 +6,9 @@ from elasticsearch.helpers import bulk
 from decorator import backoff
 from config import settings
 from logger import logger
+from state import state
+
+
 
 
 
@@ -30,14 +33,18 @@ class Elastic:
             logger.info("%s schema is created in ES", self.schema)
         finally:
             logger.info("%s is exist", self.index)
-    def load_entry(self, data):
+    def load_entry(self, data, modified, last_updated):
+        if modified > last_updated:
+            last_updated = modified
         actions = []
         for row in data:
-            print(row['id'])
-            print(type(row['id']))
             actions.append({"_index": self.index, "_source": row, '_id': row['id']})
-        # actions = [ {"_index": self.index, "_source": row, '_id': row['id']} for row in data]
-        bulk(self.es, actions)
+        actions = [ {"_index": self.index, "_source": row, '_id': row['id']} for row in data]
+        success, _ = bulk(self.es, actions)
+
+        if success:
+            state.set_state(settings.ELASTIC_INDEX, str(last_updated))
+            logger.info("Uploaded to ES successfully")
 
 
 elastic = Elastic()

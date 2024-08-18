@@ -9,6 +9,7 @@ from decorator import backoff
 from config import settings
 from queries import *
 from models import Movie
+from state import state
 
 
 class Postgres:
@@ -20,11 +21,12 @@ class Postgres:
                                  host=settings.POSTGRES_HOST,
                                  options='-c search_path=content')
     
-    def extract(self):
+    def extract(self, last_updated):
         batch_size: int = 100
+
         with connect(self.dsn, row_factory=dict_row) as conn:
             with conn.cursor() as cur:
-                cur.execute(FILM_WORKS_QUERY)
+                cur.execute(FILM_WORKS_QUERY, {'modified': last_updated})
                 while True:
                     films = cur.fetchmany(batch_size)
                     if not films:
@@ -35,7 +37,6 @@ class Postgres:
                         film['directors'] = self.get_detail(film['id'], DIRECTORS_QUERY)
                         film['writers'] = self.get_detail(film['id'], WRITERS_QUERY)
                         film['genres'] = self.get_detail(film['id'], GENRES_QUERY)
-
                         yield Movie(**film)
 
 

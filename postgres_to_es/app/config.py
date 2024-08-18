@@ -21,6 +21,9 @@ class EtlSettings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_HOST: str
     POSTGRES_PORT: int
+
+    REDIS_HOST: str
+    REDIS_PORT: int
     @property
     def elastic_url(self):
         return f'http://{self.ELASTIC_HOST}:{self.ELASTIC_PORT}'

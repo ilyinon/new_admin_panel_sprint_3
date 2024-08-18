@@ -22,6 +22,7 @@ class Movie(BaseModel):
     title: str
     description: Optional[str]
     creation_date: Optional[Union[datetime, str]]
+    modified: Optional[Union[datetime, str]]
     type: str
     actors: Optional[List[PersonRole]]
     directors: Optional[List[PersonRole]]
