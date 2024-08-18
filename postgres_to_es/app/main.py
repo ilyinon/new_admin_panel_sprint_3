@@ -13,7 +13,7 @@ class Etl:
         # self.state = state.get_state(settings.ELASTIC_INDEX)
         self.state = datetime.strptime(state.get_state(settings.ELASTIC_INDEX), '%Y-%m-%d %H:%M:%S.%f')
 
-        print(type(self.state))
+        print(self.state)
         if not self.state:
             self.state = str(datetime.now() - timedelta(days=365*1000))
             # a= (str(self.state))
@@ -28,12 +28,12 @@ class Etl:
             el = {
                 'id': str(film.id),
                 'imdb_rating': film.rating,
-                'genres': [genre.name for genre in film.genres] if film.genres else '',
+                'genres': [genre.name for genre in film.genres] if film.genres else [],
                 'title': film.title.replace('"', '\"'),
                 'description': film.description or '',
-                'directors_names': [director.name for director in film.directors] if film.directors else '',
-                'actors_names': [actor.name for actor in film.actors] if film.actors else '',
-                'writers_names': [writer.name for writer in film.writers] if film.writers else '',
+                'directors_names': ' '.join([director.name for director in film.directors]) if film.directors else '',
+                'actors_names': ' '.join([actor.name for actor in film.actors]) if film.actors else '',
+                'writers_names': ' '.join([writer.name for writer in film.writers]) if film.writers else '',
                 'directors': [{'id': str(director.id),
                                  'name': director.name} for director in film.directors] if film.directors else [],
                 'actors': [{'id': str(actor.id),
@@ -41,11 +41,11 @@ class Etl:
                 'writers': [{'id': str(writer.id),
                                  'name': writer.name} for writer in film.writers] if film.writers else []
             }
+            print(el)
             tmp = []
             tmp.append(el)
             self.load(tmp , film.modified)
             transformed_list.append(el)
-        # print(transformed_list)
         return(transformed_list)
 
     def load(self, data, modified):
@@ -58,6 +58,6 @@ if __name__ == '__main__':
     etl = Etl()
     etl.start()
     
-    # etl.transform(etl.extract())
+    etl.transform(etl.extract())
     # etl.load(etl.transform(etl.extract()))
     # etl.load()

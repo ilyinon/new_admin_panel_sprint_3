@@ -20,7 +20,6 @@ class Elastic:
 
     @backoff
     def create_index(self):
-        logger.info("Starting")
         try:
             self.es.indices.get(index=self.index)
         except NotFoundError:
@@ -36,11 +35,11 @@ class Elastic:
     def load_entry(self, data, modified, last_updated):
         if modified > last_updated:
             last_updated = modified
-        actions = []
+        film_to_upload = []
         for row in data:
-            actions.append({"_index": self.index, "_source": row, '_id': row['id']})
-        actions = [ {"_index": self.index, "_source": row, '_id': row['id']} for row in data]
-        success, _ = bulk(self.es, actions)
+            film_to_upload.append({"_index": self.index, "_source": row, '_id': row['id']})
+        film_to_upload = [ {"_index": self.index, "_source": row, '_id': row['id']} for row in data]
+        success, _ = bulk(self.es, film_to_upload)
 
         if success:
             state.set_state(settings.ELASTIC_INDEX, str(last_updated))

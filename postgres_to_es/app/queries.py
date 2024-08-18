@@ -1,6 +1,6 @@
 FILM_WORKS_QUERY = 'SELECT "film_work"."id", "film_work"."title", "film_work"."description", ' \
-                   '"film_work"."created_at", "film_work"."updated_at", "film_work"."rating", ' \
-                   '"film_work"."type" FROM "content"."film_work" WHERE modified > %s(modified)s ' \
+                   '"film_work"."creation_date", "film_work"."modified", "film_work"."rating", ' \
+                   '"film_work"."type" FROM "content"."film_work" WHERE modified > %(modified)s ' \
                    'ORDER BY "film_work"."title" ASC'
 
 # FILM_WORKS_QUERY = 'SELECT "film_work"."id", "film_work"."title", "film_work"."description", ' \
