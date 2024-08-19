@@ -1,5 +1,4 @@
-import logger
-
+from logger import logger
 from elastic import elastic
 from postgres import pg
 from time import sleep
@@ -11,20 +10,15 @@ class Etl:
     def start(self):
         elastic.create_index()
         self.state = state.get_state(settings.ELASTIC_INDEX)
-        # self.state = datetime.strptime(state.get_state(settings.ELASTIC_INDEX), '%Y-%m-%d %H:%M:%S.%f')
-
-        print(self.state)
         if not self.state:
             self.state = str(datetime.now() - timedelta(days=365*1000))
-            # a= (str(self.state))
-            # print(datetime.strptime(a, '%Y-%m-%d %H:%M:%S.%f'))
-            ### self.state = datetime.strptime(self.state, '%Y-%m-%d %H:%M:%S.%f')
             state.set_state(settings.ELASTIC_INDEX, str(self.state))
         
     def extract(self):
         return pg.extract(datetime.strptime(self.state, '%Y-%m-%d %H:%M:%S.%f'))
 
     def transform(self, data):
+        tmp = []
         for film in data:
             el = {
                 'id': str(film.id),
@@ -42,8 +36,12 @@ class Etl:
                 'writers': [{'id': str(writer.id),
                                  'name': writer.name} for writer in film.writers] if film.writers else []
             }
-            tmp = []
+            
             tmp.append(el)
+            if len(tmp) >= settings.BATCH_SIZE:
+                self.load(tmp , film.modified)
+                tmp = []
+        if len(tmp) > 0:
             self.load(tmp , film.modified)
 
     def load(self, data, modified):
@@ -55,7 +53,7 @@ class Etl:
 if __name__ == '__main__':
     etl = Etl()
     etl.start()
-    
-    etl.transform(etl.extract())
-    # etl.load(etl.transform(etl.extract()))
-    # etl.load()
+    while True:
+        logger.info("Loading data from pg to elastic")
+        etl.transform(etl.extract())
+        sleep(settings.DELAY_BETWEEN_LOADS)

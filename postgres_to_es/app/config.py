@@ -9,7 +9,10 @@ logging.basicConfig(level=logging.INFO)
 
 class EtlSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=DOTENV)
+
     BATCH_SIZE: int
+    DELAY_BETWEEN_LOADS: int
+
     ELASTIC_SCHEMA_PATH: str
     ELASTIC_HOST: str
     ELASTIC_PORT: int
@@ -30,6 +33,3 @@ class EtlSettings(BaseSettings):
 
 
 settings = EtlSettings()
-# pg_settings = PgSettings()
-
-# print(settings.elastic_url)

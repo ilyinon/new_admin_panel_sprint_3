@@ -23,13 +23,12 @@ class Postgres:
     
     @backoff()
     def extract(self, last_updated):
-        batch_size: int = 100
 
         with connect(self.dsn, row_factory=dict_row) as conn:
             with conn.cursor() as cur:
                 cur.execute(FILM_WORKS_QUERY, {'modified': last_updated})
                 while True:
-                    films = cur.fetchmany(batch_size)
+                    films = cur.fetchmany(settings.BATCH_SIZE)
                     if not films:
                         logger.info("No film to extract")
                         break
