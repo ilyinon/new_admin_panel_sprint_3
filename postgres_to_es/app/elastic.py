@@ -18,6 +18,9 @@ class Elastic:
 
     @backoff()
     def create_index(self):
+        """
+        Проверить что Elastic index существует, или создать новый.
+        """
         logger.info("ES is initializing")
         try:
             self.es.indices.get(index=self.index)
@@ -34,13 +37,15 @@ class Elastic:
 
     @backoff()
     def load_entry(self, data, modified, last_updated):
-        # if modified > last_updated:
-        #     last_updated = modified
-        film_to_upload = [ {"_index": self.index, "_source": row, '_id': row['id']} for row in data]
+        """
+        Загрузить данные в elastic пачкой, обновить стейт при успехе.
+        """
+        film_to_upload = [{"_index": self.index, "_source": row, '_id': row['id']} for row in data]
         success, _ = bulk(self.es, film_to_upload)
 
         if success:
             state.set_state(settings.ELASTIC_INDEX, str(last_updated if modified < last_updated else modified))
             logger.info("Uploaded to ES successfully: %s, %s", len(data), str(last_updated))
+
 
 elastic = Elastic()

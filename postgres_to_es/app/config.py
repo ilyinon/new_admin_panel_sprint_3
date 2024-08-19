@@ -2,10 +2,11 @@ import logging
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DOTENV = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '.env'))
+DOTENV = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 
 logging.basicConfig(level=logging.INFO)
+
 
 class EtlSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=DOTENV)
@@ -27,6 +28,7 @@ class EtlSettings(BaseSettings):
 
     REDIS_HOST: str
     REDIS_PORT: int
+
     @property
     def elastic_url(self):
         return f'http://{self.ELASTIC_HOST}:{self.ELASTIC_PORT}'

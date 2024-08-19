@@ -1,14 +1,14 @@
 FILM_WORKS_QUERY = """
-SELECT 
-    "film_work"."id", 
-    "film_work"."title", 
+SELECT
+    "film_work"."id",
+    "film_work"."title",
     "film_work"."description",
-    "film_work"."creation_date", 
-    "film_work"."modified", 
+    "film_work"."creation_date",
+    "film_work"."modified",
     "film_work"."rating",
     "film_work"."type"
-FROM "content"."film_work" 
-WHERE 
+FROM "content"."film_work"
+WHERE
     "film_work"."modified" > %(modified)s
 ORDER BY "film_work"."modified" ASC
 """

@@ -1,7 +1,7 @@
 import uuid
 
 from datetime import datetime
-from typing import List, Optional, Any
+from typing import List, Optional
 from typing import Union
 
 from pydantic import BaseModel
@@ -15,6 +15,7 @@ class PersonRole(BaseModel):
 class Genre(BaseModel):
     id: uuid.UUID
     name: str
+
 
 class Movie(BaseModel):
     id: uuid.UUID
