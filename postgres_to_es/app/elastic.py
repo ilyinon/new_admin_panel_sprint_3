@@ -9,9 +9,6 @@ from logger import logger
 from state import state
 
 
-
-
-
 class Elastic:
     def __init__(self):
         self.index = settings.ELASTIC_INDEX
@@ -37,16 +34,13 @@ class Elastic:
 
     @backoff()
     def load_entry(self, data, modified, last_updated):
-        if modified > last_updated:
-            last_updated = modified
-        film_to_upload = []
-        for row in data:
-            film_to_upload.append({"_index": self.index, "_source": row, '_id': row['id']})
+        # if modified > last_updated:
+        #     last_updated = modified
         film_to_upload = [ {"_index": self.index, "_source": row, '_id': row['id']} for row in data]
         success, _ = bulk(self.es, film_to_upload)
 
         if success:
-            state.set_state(settings.ELASTIC_INDEX, str(last_updated))
-            logger.info("Uploaded to ES successfully: %s", len(data))
+            state.set_state(settings.ELASTIC_INDEX, str(last_updated if modified < last_updated else modified))
+            logger.info("Uploaded to ES successfully: %s, %s", len(data), str(last_updated))
 
 elastic = Elastic()

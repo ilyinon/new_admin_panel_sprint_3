@@ -9,16 +9,14 @@ from config import settings
 class Etl:
     def start(self):
         elastic.create_index()
-        self.state = state.get_state(settings.ELASTIC_INDEX)
-        if not self.state:
-            self.state = str(datetime.now() - timedelta(days=365*1000))
-            state.set_state(settings.ELASTIC_INDEX, str(self.state))
+
         
     def extract(self):
-        return pg.extract(datetime.strptime(self.state, '%Y-%m-%d %H:%M:%S.%f'))
+        return pg.extract(self.state_data)
 
     def transform(self, data):
         tmp = []
+        latest = self.state_data
         for film in data:
             el = {
                 'id': str(film.id),
@@ -38,16 +36,27 @@ class Etl:
             }
             
             tmp.append(el)
+            latest = latest if film.modified < latest else film.modified
             if len(tmp) >= settings.BATCH_SIZE:
-                self.load(tmp , film.modified)
+                self.load(tmp , latest)
                 tmp = []
+                latest = self.state_data
+
         if len(tmp) > 0:
             self.load(tmp , film.modified)
 
     def load(self, data, modified):
-       elastic.load_entry(data, modified, datetime.strptime(self.state, '%Y-%m-%d %H:%M:%S.%f'))
-
-
+       elastic.load_entry(data, modified, self.state_data)
+    
+    def get_state(self):
+        self.state_str = state.get_state(settings.ELASTIC_INDEX)
+        if not self.state_str:
+            self.state_data = datetime.now() - timedelta(days=365*1000)
+            self.state_str = str(self.state_data)
+            state.set_state(settings.ELASTIC_INDEX, str(self.state_str))
+        else:
+            self.state_data = datetime.strptime(self.state_str, '%Y-%m-%d %H:%M:%S.%f')
+        logger.info("the currect state is %s", self.state_str)
 
 
 if __name__ == '__main__':
@@ -55,5 +64,6 @@ if __name__ == '__main__':
     etl.start()
     while True:
         logger.info("Loading data from pg to elastic")
+        etl.get_state()
         etl.transform(etl.extract())
         sleep(settings.DELAY_BETWEEN_LOADS)

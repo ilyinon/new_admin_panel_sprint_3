@@ -1,7 +1,7 @@
 from redis import Redis
 import abc
 import json
-import os
+from logger import logger
 from typing import Any, Dict
 from config import settings
 from decorator import backoff
@@ -42,6 +42,7 @@ class State:
         """Установить состояние для определённого ключа."""
         self.state[key] = value
         self.storage.save_state(self.state)
+        logger.info("state is set to %s", value)
 
     def get_state(self, key: str) -> Any:
         """Получить состояние по определённому ключу."""
@@ -49,4 +50,3 @@ class State:
 
 redis_storage = RedisStorage()
 state = State(redis_storage)
-
