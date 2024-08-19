@@ -21,6 +21,7 @@ class Postgres:
                                  host=settings.POSTGRES_HOST,
                                  options='-c search_path=content')
     
+    @backoff()
     def extract(self, last_updated):
         batch_size: int = 100
 
@@ -39,9 +40,8 @@ class Postgres:
                         film['genres'] = self.get_detail(film['id'], GENRES_QUERY)
                         yield Movie(**film)
 
-
+    @backoff()
     def get_detail(self, film_id, QUERY):
-        batch_size: int = 100
         with connect(self.dsn, row_factory=dict_row) as conn:
             with conn.cursor() as cur:
                 cur.execute(QUERY, {'film_id': film_id})

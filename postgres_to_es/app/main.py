@@ -23,8 +23,8 @@ class Etl:
         
     def extract(self):
         return pg.extract(datetime.strptime(self.state, '%Y-%m-%d %H:%M:%S.%f'))
+
     def transform(self, data):
-        transformed_list = []
         for film in data:
             el = {
                 'id': str(film.id),
@@ -42,12 +42,9 @@ class Etl:
                 'writers': [{'id': str(writer.id),
                                  'name': writer.name} for writer in film.writers] if film.writers else []
             }
-            print(el)
             tmp = []
             tmp.append(el)
             self.load(tmp , film.modified)
-            transformed_list.append(el)
-        return(transformed_list)
 
     def load(self, data, modified):
        elastic.load_entry(data, modified, datetime.strptime(self.state, '%Y-%m-%d %H:%M:%S.%f'))

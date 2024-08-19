@@ -17,9 +17,11 @@ class Elastic:
         self.index = settings.ELASTIC_INDEX
         self.schema = settings.ELASTIC_SCHEMA_PATH
         self.es = Elasticsearch(settings.elastic_url)
+        print(self.es)
 
-    @backoff
+    @backoff()
     def create_index(self):
+        logger.info("ES is initializing")
         try:
             self.es.indices.get(index=self.index)
         except NotFoundError:
@@ -31,7 +33,9 @@ class Elastic:
             self.es.indices.create(index=self.index, body=elastic_schema_json)
             logger.info("%s schema is created in ES", self.schema)
         finally:
-            logger.info("%s is exist", self.index)
+            logger.info("%s index is ready", self.index)
+
+    @backoff()
     def load_entry(self, data, modified, last_updated):
         if modified > last_updated:
             last_updated = modified
@@ -43,7 +47,6 @@ class Elastic:
 
         if success:
             state.set_state(settings.ELASTIC_INDEX, str(last_updated))
-            logger.info("Uploaded to ES successfully")
-
+            logger.info("Uploaded to ES successfully: %s", len(data))
 
 elastic = Elastic()
