@@ -76,7 +76,7 @@ class Etl:
             state.set_state(settings.ELASTIC_INDEX, str(self.state_str))
         else:
             self.state_data = datetime.strptime(self.state_str, '%Y-%m-%d %H:%M:%S.%f')
-        logger.info("the currect state is %s", self.state_str)
+        logger.info("The currect state is %s", self.state_str)
 
 
 if __name__ == '__main__':
