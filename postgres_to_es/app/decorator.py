@@ -1,5 +1,12 @@
 import logging
+import time
 from functools import wraps
+
+import elasticsearch
+import psycopg
+import redis
+
+from logger import logger
 
 
 def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=30):
@@ -20,11 +27,17 @@ def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=30):
         @wraps(func)
         def inner(*args, **kwargs):
             sleep_time = start_sleep_time
-            while True:
+            while sleep_time < border_sleep_time:
                 try:
                     return func(*args, **kwargs)
-                except Exception as error:
-                    logging.error(error)
+
+                except (redis.ConnectionError, 
+                        psycopg.errors.ConnectionTimeout,
+                        elasticsearch.ConnectionError) as error:
+                    logger.error(error)
+
+                time.sleep(sleep_time)
+                sleep_time = (sleep_time + factor) * 2
 
         return inner
 

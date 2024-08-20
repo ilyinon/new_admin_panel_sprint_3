@@ -3,8 +3,8 @@ import json
 from elasticsearch import Elasticsearch, NotFoundError
 from elasticsearch.helpers import bulk
 
-from decorator import backoff
 from config import settings
+from decorator import backoff
 from logger import logger
 from state import state
 
@@ -41,11 +41,17 @@ class Elastic:
         Загрузить данные в elastic пачкой, обновить стейт при успехе.
         """
         film_to_upload = [{"_index": self.index, "_source": row, '_id': row['id']} for row in data]
-        success, _ = bulk(self.es, film_to_upload)
+        success, failed = bulk(self.es, film_to_upload)
 
         if success:
-            state.set_state(settings.ELASTIC_INDEX, str(last_updated if modified < last_updated else modified))
-            logger.info("Uploaded to ES successfully: %s, %s", len(data), str(last_updated))
+            the_recent_state = str(last_updated if modified < last_updated else modified)
+            state.set_state(settings.ELASTIC_INDEX, the_recent_state)
+            logger.info("Uploaded to ES successfully: %s, %s", len(data), the_recent_state)
+        
+        if len(failed) > 0:
+            logger.info("Uploading to ES is failed: %s", len(failed))
+            for failed_items in failed:
+                logger.error(failed_items)
 
 
 elastic = Elastic()

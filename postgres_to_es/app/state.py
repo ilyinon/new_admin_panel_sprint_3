@@ -1,10 +1,12 @@
-from redis import Redis
 import abc
 import json
-from logger import logger
 from typing import Any, Dict
+
+from redis import Redis
+
 from config import settings
 from decorator import backoff
+from logger import logger
 
 
 class BaseStorage(abc.ABC):

@@ -1,10 +1,11 @@
-from logger import logger
-from elastic import elastic
-from postgres import pg
+from datetime import datetime
 from time import sleep
-from state import state
-from datetime import datetime, timedelta
+
 from config import settings
+from elastic import elastic
+from logger import logger
+from postgres import pg
+from state import state
 
 
 class Etl:
@@ -54,7 +55,7 @@ class Etl:
                 latest = self.state_data
 
         if len(tmp) > 0:
-            self.load(tmp, film.modified)
+            self.load(tmp, latest)
 
     def load(self, data, modified):
         """
@@ -71,7 +72,7 @@ class Etl:
         """
         self.state_str = state.get_state(settings.ELASTIC_INDEX)
         if not self.state_str:
-            self.state_data = datetime.now() - timedelta(days=365*1000)
+            self.state_data = datetime.min
             self.state_str = str(self.state_data)
             state.set_state(settings.ELASTIC_INDEX, str(self.state_str))
         else:

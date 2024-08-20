@@ -2,13 +2,12 @@ from psycopg import connect
 from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row
 
-
-from logger import logger
-
-from decorator import backoff
 from config import settings
-from queries import FILM_WORKS_QUERY, ACTORS_QUERY, DIRECTORS_QUERY, GENRES_QUERY, WRITERS_QUERY
+from decorator import backoff
+from logger import logger
 from models import Movie
+from queries import (ACTORS_QUERY, DIRECTORS_QUERY, FILM_WORKS_QUERY,
+                     GENRES_QUERY, WRITERS_QUERY)
 
 
 class Postgres:

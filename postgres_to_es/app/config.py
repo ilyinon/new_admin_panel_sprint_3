@@ -1,5 +1,6 @@
 import logging
 import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DOTENV = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.env'))
