@@ -12,7 +12,9 @@ from state import state
 class Elastic:
     def __init__(self):
         self.index = settings.ELASTIC_INDEX
+        self.indexes = settings.ELASTIC_INDEXES.split(',')
         self.schema = settings.ELASTIC_SCHEMA_PATH
+        self.schema_folder = settings.ELASTIC_SCHEMA_FOLDER
         self.es = Elasticsearch(settings.elastic_url)
         print(self.es)
 
@@ -22,21 +24,23 @@ class Elastic:
         Проверить что Elastic index существует, или создать новый.
         """
         logger.info("ES is initializing")
-        try:
-            self.es.indices.get(index=self.index)
-        except NotFoundError:
-            logger.info("%s is not exist", self.index)
-            with open(self.schema, 'r') as _:
-                elastic_schema_json = json.load(_)
-                logger.info("%s is opened", self.schema)
-            logger.info("Trying to create %s schema in ES", self.schema)
-            self.es.indices.create(index=self.index, body=elastic_schema_json)
-            logger.info("%s schema is created in ES", self.schema)
-        finally:
-            logger.info("%s index is ready", self.index)
+        for index in self.indexes:
+            try:
+                self.es.indices.get(index=index)
+            except NotFoundError:
+                logger.info("%s is not exist", index)
+                path_to_schema = f"{self.schema_folder}/{index}.json"
+                with open(path_to_schema, 'r') as _:
+                    elastic_schema_json = json.load(_)
+                    logger.info("%s is opened", path_to_schema)
+                logger.info("Trying to create %s schema in ES", path_to_schema)
+                self.es.indices.create(index=index, body=elastic_schema_json)
+                logger.info("%s schema is created in ES", path_to_schema)
+            finally:
+                logger.info("%s index is ready", index)
 
     @backoff()
-    def load_entry(self, data, modified, last_updated):
+    def load_entry(self, data, index_name, modified, last_updated):
         """
         Загрузить данные в elastic пачкой, обновить стейт при успехе.
         """
@@ -44,8 +48,8 @@ class Elastic:
         success, failed = bulk(self.es, film_to_upload)
 
         if success:
-            the_recent_state = str(last_updated if modified < last_updated else modified)
-            state.set_state(settings.ELASTIC_INDEX, the_recent_state)
+            the_recent_state = last_updated if modified < last_updated else modified
+            state.set_state(index_name, the_recent_state)
             logger.info("Uploaded to ES successfully: %s, %s", len(data), the_recent_state)
         
         if len(failed) > 0:

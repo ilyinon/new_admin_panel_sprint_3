@@ -27,3 +27,12 @@ class Movie(BaseModel):
     directors: Optional[List[PersonRole]]
     writers: Optional[List[PersonRole]]
     genres: Optional[List[Genre]]
+
+
+class GenreFull(Genre):
+    description: Optional[str]
+
+
+class Person(PersonRole):
+    role: str
+    film_ids: Optional[List[uuid.UUID]]

@@ -64,3 +64,24 @@ JOIN
 WHERE
     "genre_film_work"."film_work_id" = %(film_id)s
 """
+
+GENRES_LIST_QUERY = """
+SELECT
+    "genre"."id",
+    "genre"."name",
+    "genre"."description",
+    "genre"."modified"
+FROM 
+    "content"."genre"
+ORDER BY "genre"."modified" ASC
+"""
+
+PERSONS_LIST_QUERY = """
+SELECT
+    "person"."id",
+    "person"."full_name",
+    "person"."modified"
+FROM 
+    "content"."person"
+ORDER BY "person"."modified" ASC
+"""

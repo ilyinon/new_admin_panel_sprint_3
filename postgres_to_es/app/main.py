@@ -17,18 +17,18 @@ class Etl:
         """
         elastic.create_index()
 
-    def extract(self):
+    def extract(self, entity, entity_state):
         """
         Выгрузить данные из pgsql новее чем из предыдущей загрузки.
         """
-        return pg.extract(self.state_data)
+        return pg.extract(entity, entity_state)
 
     def transform(self, data):
         """
         Подготовить данные из формата pgsql в формат elastic.
         """
         tmp = []
-        latest = self.state_data
+        latest = self.state_movies
         for film in data:
             el = {
                 'id': str(film.id),
@@ -50,34 +50,33 @@ class Etl:
             tmp.append(el)
             latest = latest if film.modified < latest else film.modified
             if len(tmp) >= settings.BATCH_SIZE:
-                self.load(tmp, latest)
+                self.load(tmp, "movies", latest, self.state_movies)
                 tmp = []
-                latest = self.state_data
+                latest = self.state_movies
 
         if len(tmp) > 0:
-            self.load(tmp, latest)
+            self.load(tmp, "movies", latest, self.state_movies)
 
-    def load(self, data, modified):
+    def load(self, data, index_name, modified, current_state):
         """
         Загрузить данные в elastic, передаём данные для загрузки,
         наиболее свежую дату модификации из фильмов и текущую дату из стейта
         проверку и обновление стейта делаем после успешной загрузки в elastic.
         """
-        elastic.load_entry(data, modified, self.state_data)
+        elastic.load_entry(data, index_name, modified, current_state)
 
     def get_state(self):
         """
         Получаем стейт из elastic, если стейта нет делаем фейковый,
         держим стейт в str() и data() чтобы не конвертировать лишний раз.
         """
-        self.state_str = state.get_state(settings.ELASTIC_INDEX)
-        if not self.state_str:
-            self.state_data = datetime.min
-            self.state_str = str(self.state_data)
-            state.set_state(settings.ELASTIC_INDEX, str(self.state_str))
-        else:
-            self.state_data = datetime.strptime(self.state_str, '%Y-%m-%d %H:%M:%S.%f')
-        logger.info("The currect state is %s", self.state_str)
+        self.state_movies = state.get_state("movies")
+        self.state_genres = state.get_state("genres")
+        self.state_persons = state.get_state("persons")
+
+        logger.info("The currect state movies is %s", self.state_movies)
+        logger.info("The currect state genres is %s", self.state_genres)
+        logger.info("The currect state persons is %s", self.state_persons)
 
 
 if __name__ == '__main__':
@@ -86,5 +85,6 @@ if __name__ == '__main__':
     while True:
         logger.info("Loading data from pg to elastic")
         etl.get_state()
-        etl.transform(etl.extract())
+        etl.transform(etl.extract("film_work", etl.state_movies))
+        # print(list(etl.extract("genres", etl.state_genres)))
         sleep(settings.DELAY_BETWEEN_LOADS)

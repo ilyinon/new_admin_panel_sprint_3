@@ -20,6 +20,8 @@ class EtlSettings(BaseSettings):
     ELASTIC_PORT: int
     ELASTIC_SHEMA: str
     ELASTIC_INDEX: str
+    ELASTIC_INDEXES: str
+    ELASTIC_SCHEMA_FOLDER: str
 
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str

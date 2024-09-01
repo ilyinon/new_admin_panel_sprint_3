@@ -5,9 +5,9 @@ from psycopg.rows import dict_row
 from config import settings
 from decorator import backoff
 from logger import logger
-from models import Movie
+from models import Movie, GenreFull, Person
 from queries import (ACTORS_QUERY, DIRECTORS_QUERY, FILM_WORKS_QUERY,
-                     GENRES_QUERY, WRITERS_QUERY)
+                     GENRES_QUERY, WRITERS_QUERY, GENRES_LIST_QUERY, PERSONS_LIST_QUERY)
 
 
 class Postgres:
@@ -20,28 +20,49 @@ class Postgres:
                                  options='-c search_path=content')
 
     @backoff()
-    def extract(self, last_updated):
+    def extract(self, entity, last_updated):
         """
         Загрузить данные из postgres новее чем из стейта.
         Вначале получаем данные из film_work.
         После по uuid заполняем actors, directors, writers, genres из
         связанных таблиц
         """
-
+        logger.info("Загрузка данных из индекса %s", entity)
         with connect(self.dsn, row_factory=dict_row) as conn:
             with conn.cursor() as cur:
-                cur.execute(FILM_WORKS_QUERY, {'modified': last_updated})
-                while True:
-                    films = cur.fetchmany(settings.BATCH_SIZE)
-                    if not films:
-                        logger.info("No film to extract")
-                        break
-                    for film in films:
-                        film['actors'] = self.get_detail(film['id'], ACTORS_QUERY)
-                        film['directors'] = self.get_detail(film['id'], DIRECTORS_QUERY)
-                        film['writers'] = self.get_detail(film['id'], WRITERS_QUERY)
-                        film['genres'] = self.get_detail(film['id'], GENRES_QUERY)
-                        yield Movie(**film)
+                if entity == 'film_work':
+                    cur.execute(FILM_WORKS_QUERY, {'modified': last_updated})
+                    while True:
+                        films = cur.fetchmany(settings.BATCH_SIZE)
+                        if not films:
+                            logger.info("No film to extract")
+                            break
+                        for film in films:
+                            film['actors'] = self.get_detail(film['id'], ACTORS_QUERY)
+                            film['directors'] = self.get_detail(film['id'], DIRECTORS_QUERY)
+                            film['writers'] = self.get_detail(film['id'], WRITERS_QUERY)
+                            film['genres'] = self.get_detail(film['id'], GENRES_QUERY)
+                            yield Movie(**film)
+                elif entity == 'genres':
+                    cur.execute(GENRES_LIST_QUERY, {'modified': last_updated})
+                    while True:
+                        genres = cur.fetchmany(settings.BATCH_SIZE)
+                        if not genres:
+                            logger.info("No genres to extract")
+                            break
+                        for genre in genres:
+                            yield GenreFull(**genre) 
+                elif entity == 'persons':
+                    cur.execute(PERSONS_LIST_QUERY, {'modified': last_updated})
+                    while True:
+                        persons = cur.fetchmany(settings.BATCH_SIZE)
+                        if not persons:
+                            logger.info("No persons to extract")
+                            break
+                        for person in persons:
+                            yield Person(**person) 
+                else:
+                    logger.info("Неизвестный индекс %s", entity)               
 
     @backoff()
     def get_detail(self, film_id, QUERY):
