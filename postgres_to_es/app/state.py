@@ -1,5 +1,6 @@
 import abc
 import json
+from datetime import datetime
 from typing import Any, Dict
 
 from redis import Redis
@@ -50,14 +51,22 @@ class State:
 
     def set_state(self, key: str, value: Any) -> None:
         """Установить состояние для определённого ключа."""
-        self.state[key] = value
+        self.state[key] = str(value.strftime('%Y-%m-%d %H:%M:%S.%f'))
+        print(self.state[key])
         self.storage.save_state(self.state)
         logger.info("state is set to %s", value)
 
-    def get_state(self, key: str) -> Any:
+    def get_state(self, key: str) -> datetime:
         """Получить состояние по определённому ключу."""
-        return self.state.get(key, None)
+        current_state = self.state.get(key, None)
+        if not current_state:
+            return datetime.min
+            # initial_date = datetime.min.strftime('%Y-%m-%d %H:%M:%S.%f')
+            # return datetime.strptime(initial_date , '%Y-%m-%d %H:%M:%S.%f')
+        return datetime.strptime(current_state, '%Y-%m-%d %H:%M:%S.%f')
 
 
 redis_storage = RedisStorage()
+
 state = State(redis_storage)
+

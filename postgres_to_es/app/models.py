@@ -5,18 +5,23 @@ from typing import List, Optional, Union
 from pydantic import BaseModel
 
 
-class PersonRole(BaseModel):
+class MixinClassUUID(BaseModel):
     id: uuid.UUID
+
+
+class MixinClassModified(MixinClassUUID):
+    modified: Optional[Union[datetime, str]]
+
+
+class PersonRole(MixinClassUUID):
     name: str
 
 
-class Genre(BaseModel):
-    id: uuid.UUID
+class Genre(MixinClassUUID):
     name: str
 
 
-class Movie(BaseModel):
-    id: uuid.UUID
+class Movie(MixinClassModified):
     rating: Optional[float]
     title: str
     description: Optional[str]
@@ -27,3 +32,10 @@ class Movie(BaseModel):
     directors: Optional[List[PersonRole]]
     writers: Optional[List[PersonRole]]
     genres: Optional[List[Genre]]
+
+
+class GenreList(MixinClassModified):
+    name: str
+
+class PersonList(MixinClassModified):
+    full_name: str
