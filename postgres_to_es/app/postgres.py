@@ -5,7 +5,7 @@ from psycopg.rows import dict_row
 from config import settings
 from decorator import backoff
 from logger import logger
-from models import Movie, GenreFull, Person
+from models import Movie, GenreList, PersonList
 from queries import (ACTORS_QUERY, DIRECTORS_QUERY, FILM_WORKS_QUERY,
                      GENRES_QUERY, WRITERS_QUERY, GENRES_LIST_QUERY, PERSONS_LIST_QUERY)
 
@@ -51,7 +51,7 @@ class Postgres:
                             logger.info("No genres to extract")
                             break
                         for genre in genres:
-                            yield GenreFull(**genre) 
+                            yield GenreList(**genre) 
                 elif entity == 'persons':
                     cur.execute(PERSONS_LIST_QUERY, {'modified': last_updated})
                     while True:
@@ -60,7 +60,7 @@ class Postgres:
                             logger.info("No persons to extract")
                             break
                         for person in persons:
-                            yield Person(**person) 
+                            yield PersonList(**person) 
                 else:
                     logger.info("Неизвестный индекс %s", entity)               
 

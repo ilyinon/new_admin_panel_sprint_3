@@ -73,6 +73,8 @@ SELECT
     "genre"."modified"
 FROM 
     "content"."genre"
+WHERE
+    "genre"."modified" > %(modified)s
 ORDER BY "genre"."modified" ASC
 """
 
@@ -83,5 +85,27 @@ SELECT
     "person"."modified"
 FROM 
     "content"."person"
+WHERE
+    "person"."modified" > %(modified)s
 ORDER BY "person"."modified" ASC
 """
+
+# для ненормализованных данных
+# PERSONS_LIST_QUERY = """
+# SELECT
+#     "person"."id",
+#     "person"."full_name",
+#     "person"."modified",
+#     "pfw"."role" as "role",
+#     ARRAY_AGG(DISTINCT pfw.film_work_id) AS film_ids
+# FROM 
+#     "content"."person"
+# LEFT JOIN "content"."person_film_work" pfw 
+#         ON "pfw"."person_id" = "person"."id"
+# GROUP BY
+#     "person"."full_name",
+#     "person"."id",
+#     "person"."modified",
+#     "pfw"."role"        
+# ORDER BY "person"."modified" ASC
+# """

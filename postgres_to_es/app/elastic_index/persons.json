@@ -48,13 +48,6 @@
         "full_name": {
           "type": "text",
           "analyzer": "ru_en"
-        },
-        "role": {
-          "type": "text",
-          "analyzer": "ru_en"
-        },
-        "film_ids": {
-          "type": "keyword"
         }
       }
     }

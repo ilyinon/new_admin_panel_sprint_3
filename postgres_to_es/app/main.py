@@ -57,6 +57,44 @@ class Etl:
         if len(tmp) > 0:
             self.load(tmp, "movies", latest, self.state_movies)
 
+    def transform_genres(self, data):
+        tmp = []
+        latest = self.state_genres
+        for genre in data:
+            el  = {
+                'id': str(genre.id),
+                'name': genre.name
+            }
+            tmp.append(el)
+            latest = latest if genre.modified < latest else genre.modified
+            if len(tmp) >= settings.BATCH_SIZE:
+                self.load(tmp, "genres", latest, self.state_genres)
+                tmp = []
+                latest = self.state_genres
+
+        if len(tmp) > 0:
+            logger.info("genre: %s", tmp)
+            self.load(tmp, "genres", latest, self.state_genres)
+
+    def transform_persons(self, data):
+        tmp = []
+        latest = self.state_persons
+        for person in data:
+            el  = {
+                'id': str(person.id),
+                'full_name': person.full_name
+            }
+            tmp.append(el)
+            latest = latest if person.modified < latest else person.modified
+            if len(tmp) >= settings.BATCH_SIZE:
+                self.load(tmp, "persons", latest, self.state_persons)
+                tmp = []
+                latest = self.state_persons
+
+        if len(tmp) > 0:
+            logger.info("person: %s", tmp)
+            self.load(tmp, "persons", latest, self.state_persons)
+
     def load(self, data, index_name, modified, current_state):
         """
         Загрузить данные в elastic, передаём данные для загрузки,
@@ -86,5 +124,6 @@ if __name__ == '__main__':
         logger.info("Loading data from pg to elastic")
         etl.get_state()
         etl.transform(etl.extract("film_work", etl.state_movies))
-        # print(list(etl.extract("genres", etl.state_genres)))
+        etl.transform_genres(etl.extract("genres", etl.state_genres))
+        etl.transform_persons(etl.extract("persons", etl.state_persons))
         sleep(settings.DELAY_BETWEEN_LOADS)

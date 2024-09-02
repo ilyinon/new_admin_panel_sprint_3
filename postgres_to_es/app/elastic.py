@@ -44,8 +44,8 @@ class Elastic:
         """
         Загрузить данные в elastic пачкой, обновить стейт при успехе.
         """
-        film_to_upload = [{"_index": self.index, "_source": row, '_id': row['id']} for row in data]
-        success, failed = bulk(self.es, film_to_upload)
+        data_to_upload = [{"_index": index_name, "_source": row, '_id': row['id']} for row in data]
+        success, failed = bulk(self.es, data_to_upload)
 
         if success:
             the_recent_state = last_updated if modified < last_updated else modified
@@ -53,7 +53,7 @@ class Elastic:
             logger.info("Uploaded to ES successfully: %s, %s", len(data), the_recent_state)
         
         if len(failed) > 0:
-            logger.info("Uploading to ES is failed: %s", len(failed))
+            logger.info("Uploading to ES is failed: %s", failed)
             for failed_items in failed:
                 logger.error(failed_items)
 
